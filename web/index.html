@@ -1,0 +1,40 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="css/chessboard-0.3.0.min.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="js/chessboard-0.3.0.min.js"></script>
+
+<body>
+    <button onclick="addGame()">Add game</button>
+    <div id="container"></div>
+</body>
+<script type="text/javascript">
+let games = 0;
+const engine = 'https://stockfish-gjd6yal24q-uc.a.run.app/';
+
+function addGame() {
+    games++;
+    const id = `board${games}`
+    $('#container').append(`<div id="${id}" style="width: 200px; margin-left: 10px; margin-top: 10px; display:inline-block;"></div>`);
+    const board = ChessBoard(id, 'start');
+    window.board = board;
+    let player = 'w';
+
+    async function scheduleMove() {
+      const fen = `${board.fen()} ${player}`;
+      const response = await fetch(`${engine}?fen=${fen}`);
+      if (!response.ok) return;
+      const move = (await response.text()).trim()
+      if (move.length != 4) {
+          console.error(`Unsupported move: ${move}`)
+      }
+      board.move(`${move[0]}${move[1]}-${move[2]}${move[3]}`);
+      player = player === 'w' ? 'b' : 'w';
+      scheduleMove();
+    }
+    scheduleMove()
+}
+
+</script>
+</html>
